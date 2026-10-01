@@ -49,7 +49,7 @@ def run_once(
         ctx.state.options = {k: v for k, v in (options or {}).items() if v}
         ctx.save()
     opts = ctx.state.options
-    settings = load_settings(demo, opts.get("renderer", "kenburns"))
+    settings = load_settings(demo, opts.get("renderer", "kenburns"), opts.get("images", "api"))
     providers = build_providers(settings, ctx.state.counters, opts.get("plan"), opts.get("writer"))
     try:
         run_pipeline(ctx, settings, providers, from_stage)
@@ -81,6 +81,12 @@ def main(argv: list[str] | None = None) -> int:
         help="kenburns: generated stills + camera; puppet: 2D template characters animated in code",
     )
     ap.add_argument("--plan", help="script plan JSON written by an agent/human instead of the LLM step")
+    ap.add_argument(
+        "--images",
+        choices=["api", "local"],
+        default="api",
+        help="local: generate frames with an open SDXL model on the local GPU (no API key)",
+    )
     ap.add_argument("--series", help="series bible JSON: fixed cast (name, appearance, voice) and style")
     ap.add_argument(
         "--writer",
@@ -99,7 +105,13 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("give an idea or --resume RUN_ID")
     load_dotenv()
 
-    opts = {"renderer": a.renderer, "plan": a.plan, "writer": a.writer, "series": a.series}
+    opts = {
+        "renderer": a.renderer,
+        "plan": a.plan,
+        "writer": a.writer,
+        "series": a.series,
+        "images": a.images,
+    }
     ctx = run_once(a.idea, a.demo, a.runs_dir, a.resume, a.from_stage, a.run_id, opts)
     status = ctx.state.status
     final = ctx.dir / "final.mp4"

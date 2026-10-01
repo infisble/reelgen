@@ -171,3 +171,22 @@ def test_series_bible_overrides_invented_looks(tmp_path):
     plan = json.loads((ctx.dir / "script.json").read_text(encoding="utf-8"))
     assert plan["characters"][0]["appearance"] == "zucchini with a patch"
     assert plan["characters"][0]["voice"] == "male_calm" and plan["visual_style"] == "glossy 3D"
+
+
+class TieJudge:
+    """Every frame fails with the same score; only the first one also has an anatomy defect."""
+
+    def __init__(self):
+        self.n = 0
+
+    def review(self, png, prompt):
+        self.n += 1
+        return ImageReview(score=2, has_text_or_watermark=False, has_anatomy_defects=self.n == 1, issues=[])
+
+
+def test_fallback_prefers_frame_without_defects(tmp_path):
+    ctx, p, _ = make(tmp_path)
+    p.judge = TieJudge()
+    run_pipeline(ctx, load_settings(demo=True), p)
+    meta = json.loads((ctx.dir / "images/shot_1.json").read_text(encoding="utf-8"))
+    assert meta["accepted"] is False and meta["review"]["has_anatomy_defects"] is False

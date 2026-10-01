@@ -22,9 +22,10 @@ Hard rules:
 - You receive a numbered list of LINES. They will be spoken word-for-word by TTS. You must NOT rewrite,
   translate, shorten or extend them. Reference them only by line_index, in order, each exactly once.
 - 1 to {max_shots} shots. A shot may have no lines (establishing/reaction shot).
-- visual_prompt describes ONE still frame: subject, action, setting, lighting, lens. Repeat the relevant
-  character appearance verbatim in each prompt for consistency. Never put dialogue, captions,
-  letters, signs or logos in the prompt.
+- visual_prompt describes ONE still frame: action, framing, setting, lighting, lens. Do NOT describe how
+  the characters look: their `appearance` is inserted by code for everyone in on_screen. Never put
+  dialogue, captions, letters, signs or logos in the prompt.
+- expression: the main on-screen character's face and pose, matching the line's emotion.
 - Pick camera motion that supports the emotion of the shot.
 - on_screen lists the declared characters visible in the frame; their reference images will be supplied.
 - Use 'narrator' as speaker for voice-over; otherwise a declared character name.
@@ -42,8 +43,18 @@ Put the speaker on_screen.
 """
 
 
-def script_system(max_shots: int, renderer: str) -> str:
-    return SCRIPT_SYSTEM.format(max_shots=max_shots) + (PUPPET_HINT if renderer == "puppet" else "")
+LOCAL_IMAGE_HINT = """
+Image model note: frames come from a local SDXL model that reads only ~60 words. Keep every visual_prompt
+under 20 words (action, setting, light). One character per shot in on_screen: the model blends two
+characters into one, so show the other character in its own shot.
+Describe object/food/animal characters as "cute 3D cartoon <X> mascot, its whole body is a real <X> with a
+face, tiny arms and legs, ..." in `appearance` - otherwise the model draws a human.
+"""
+
+
+def script_system(max_shots: int, renderer: str, images: str = "api") -> str:
+    hint = PUPPET_HINT if renderer == "puppet" else LOCAL_IMAGE_HINT if images == "local" else ""
+    return SCRIPT_SYSTEM.format(max_shots=max_shots) + hint
 
 
 def script_user(parsed: ParsedInput, feedback: list[str], context: str = "") -> str:

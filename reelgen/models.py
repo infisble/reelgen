@@ -44,6 +44,12 @@ class ShotPlan(BaseModel):
     visual_prompt: str = Field(
         description="Image prompt for a vertical 9:16 frame. No dialogue text, no captions, no letters."
     )
+    expression: str = Field(
+        default="",
+        description="Facial expression and pose of the main on-screen character, 2-8 words, in exaggerated "
+        "cartoon wording, e.g. 'gasping in shock, jaw dropped, mouth wide open, raised eyebrows'. "
+        "Goes first in the image prompt.",
+    )
     camera: Camera
 
 

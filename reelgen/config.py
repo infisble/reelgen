@@ -13,6 +13,7 @@ def _env(name: str, default: str) -> str:
 @dataclass(frozen=True)
 class Settings:
     demo: bool
+    images: str = "api"  # api: provider model (OpenAI) | local: open SDXL model on the local GPU
     renderer: str = "kenburns"  # kenburns: generated stills + camera | puppet: 2D template characters
     # OpenAI models (only used when demo=False)
     llm_model: str = _env("REELGEN_LLM_MODEL", "gpt-5-mini")
@@ -27,7 +28,7 @@ class Settings:
     max_shots: int = 3
     script_attempts: int = 3  # LLM repair loop
     tts_attempts: int = 3  # re-synthesize until STT matches the line verbatim
-    image_attempts: int = 2  # regenerate if the vision judge rejects the frame
+    image_attempts: int = 3  # regenerate if the vision judge rejects the frame
     min_image_score: int = 3  # judge score 1..5
 
     # Timeline
@@ -40,5 +41,5 @@ class Settings:
     height: int = 1920
 
 
-def load_settings(demo: bool, renderer: str = "kenburns") -> Settings:
-    return Settings(demo=demo, renderer=renderer)
+def load_settings(demo: bool, renderer: str = "kenburns", images: str = "api") -> Settings:
+    return Settings(demo=demo, renderer=renderer, images=images)

@@ -231,6 +231,18 @@ def stage_cast(ctx: RunContext, s: Settings, p: Providers) -> dict:
     return {"cast": cast}
 
 
+def image_prompt(plan: ScriptPlan, sh) -> str:
+    """Expression first (models weigh early tokens most), then the looks of everyone on screen - taken
+    from `characters` by code, so a character can't drift between shots - then action and setting."""
+    looks = {c.name: c.appearance for c in plan.characters}
+    parts = [sh.expression, *(looks[n] for n in sh.on_screen if n in looks), sh.visual_prompt]
+    return (
+        ", ".join(x.strip().rstrip(".") for x in parts if x and x.strip())
+        + f". Style: {plan.visual_style}. Vertical 9:16 cinematic frame."
+        + " No text, no captions, no letters, no watermark."
+    )
+
+
 def stage_images(ctx: RunContext, s: Settings, p: Providers) -> dict:
     plan = ScriptPlan.model_validate(ctx.read_json("script.json"))
     if s.renderer == "puppet":  # key frames for preview/report; the animation itself happens in render
@@ -241,10 +253,7 @@ def stage_images(ctx: RunContext, s: Settings, p: Providers) -> dict:
     img_id = type(p.images).__name__ + (s.image_model if not s.demo else "")
     out = []
     for sh in plan.shots:
-        prompt = (
-            f"{sh.visual_prompt} Style: {plan.visual_style}. Vertical 9:16 cinematic frame. "
-            "No text, no captions, no letters, no watermark."
-        )
+        prompt = image_prompt(plan, sh)
         cast = ctx.stage("cast").outputs.get("cast", {})
         refs = [ctx.dir / cast[n] for n in sh.on_screen if n in cast]
         if refs:
@@ -277,8 +286,10 @@ def stage_images(ctx: RunContext, s: Settings, p: Providers) -> dict:
             ctx.log(
                 "images", "review", shot=sh.shot_id, attempt=attempt, score=r.score, ok=ok, issues=r.issues
             )
-            if best is None or r.score > best[0]:
-                best = (r.score, cand, r.model_dump())
+            # fallback ranking if every attempt fails: a defect costs more than a point of prompt match
+            rank = r.score - 2 * r.has_anatomy_defects - 2 * r.has_text_or_watermark
+            if best is None or rank > best[0]:
+                best = (rank, cand, r.model_dump())
             if ok:
                 accepted = True
                 break

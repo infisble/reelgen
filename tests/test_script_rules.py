@@ -68,3 +68,14 @@ def test_on_screen_must_be_declared():
     p = plan()
     p.shots[0].on_screen = ["Ghost"]
     assert any("Ghost" in e for e in validate_plan(p, PARSED, 3))
+
+
+def test_image_prompt_inserts_looks_by_code_with_expression_first():
+    from reelgen.pipeline import image_prompt
+
+    p = plan()
+    p.shots[0].expression = "shocked, wide eyes"
+    p.shots[0].visual_prompt = "at a rainy bus stop, night, neon"
+    prompt = image_prompt(p, p.shots[0])
+    assert prompt.startswith("shocked, wide eyes, red coat, at a rainy bus stop")
+    assert "Style: noir" in prompt

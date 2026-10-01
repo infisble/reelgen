@@ -71,4 +71,12 @@ def build_providers(
         from .claude_code import ClaudeCodeWriter
 
         providers.writer = ClaudeCodeWriter(settings, counters)
+    if settings.images == "local":
+        from .local_sd import LocalSDXLImages
+
+        providers.images, providers.judge = LocalSDXLImages(counters), None
+        if writer == "claude":  # keyless vision QA: Claude Code looks at every frame
+            from .claude_code import ClaudeCodeJudge
+
+            providers.judge = ClaudeCodeJudge(counters)
     return providers

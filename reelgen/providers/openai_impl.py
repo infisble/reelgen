@@ -39,7 +39,7 @@ class OpenAIWriter:
     def write(self, parsed: ParsedInput, feedback: list[str], context: str = "") -> ScriptPlan:
         resp = self.c.responses.parse(
             model=self.s.llm_model,
-            instructions=script_system(self.s.max_shots, self.s.renderer),
+            instructions=script_system(self.s.max_shots, self.s.renderer, self.s.images),
             input=script_user(parsed, feedback, context),
             text_format=ScriptPlan,
         )
