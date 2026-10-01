@@ -5,6 +5,19 @@
 
 Відповіді на питання з завдання (стек, дата-флоу, метрики, як працював з AI, що зрізав) лежать у [NOTES.md](NOTES.md).
 
+## Приклади
+
+Міні-серіал «Кабачок-мільйонер», три серії по 15–20 секунд, згенеровані повністю автоматично без жодних
+API-ключів (сценарій — Claude Code, 3D-кадри — локальна модель на RTX 4060, голос — edge-tts,
+музика — MusicGen):
+
+- [examples/zucchini_ep1.mp4](examples/zucchini_ep1.mp4) — таємниця: багатий кабачок вирішує жити як бідний
+- [examples/zucchini_ep2.mp4](examples/zucchini_ep2.mp4) — насмішка: Помідора висміює «бідного» кабачка
+- [examples/zucchini_ep3.mp4](examples/zucchini_ep3.mp4) — викриття: кабачок виявляється власником пентхауса
+
+Кадри статичні з рухом камери, персонажі не анімовані (для цього потрібна відеомодель, див. «що я зрізав»
+у NOTES).
+
 ## Як запустити
 
 Потрібен Python 3.11+. ffmpeg окремо ставити не треба, він їде разом з `imageio-ffmpeg`.
@@ -46,6 +59,8 @@ python -m reelgen --demo --writer claude --images local --series examples/series
 - Якщо щось впало посеред запуску, `--resume <run_id>` продовжить з того самого місця.
 - `--from-stage images` перегенерує з потрібного етапу. Все, що не змінилось, береться з кешу.
 - `--series examples/series/zucchini.json` задає «біблію серіалу»: герої виглядають і звучать однаково в усіх серіях.
+- `--music assets/music/zucchini_theme.wav` підкладає фонову музику, яка автоматично стихає під репліками.
+  Свій трек можна згенерувати: `python scripts/make_music.py "playful cartoon comedy" --out theme.wav`.
 - `python -m reelgen.evals run --label v1` проганяє набір тестових ідей, `evals compare` порівнює дві версії.
 - `python scripts/check.py` запускає лінтер і тести. Той самий скрипт стоїть як Stop-hook для Claude Code,
   тож агент не може сказати «готово», поки щось червоне.
