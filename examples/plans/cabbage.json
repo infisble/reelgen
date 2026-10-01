@@ -1,0 +1,25 @@
+{
+  "title": "Борщ зради",
+  "logline": "Мама-капуста дізналась, що її син-буряк пішов в олів'є.",
+  "visual_style": "bright 2D cartoon, warm kitchen light",
+  "characters": [
+    {"name": "Мама-Капуста", "appearance": "plump green cabbage mom, red headscarf, polka-dot apron", "voice": "female_calm"},
+    {"name": "Буряк", "appearance": "young purple beet son, leafy hair", "voice": "male_calm"}
+  ],
+  "shots": [
+    {
+      "shot_id": 1,
+      "lines": [{"line_index": 0, "speaker": "Мама-Капуста", "delivery": "furious, betrayed, loud, voice shaking"}],
+      "on_screen": ["Мама-Капуста", "Буряк"],
+      "visual_prompt": "Kitchen at evening, cabbage mom turns to the beet son next to a pot of borscht",
+      "camera": "zoom_in"
+    },
+    {
+      "shot_id": 2,
+      "lines": [{"line_index": 1, "speaker": "Буряк", "delivery": "guilty, quiet, sighing, eyes down"}],
+      "on_screen": ["Буряк"],
+      "visual_prompt": "Close-up of the beet son in the kitchen, ashamed, warm light from the window",
+      "camera": "static"
+    }
+  ]
+}

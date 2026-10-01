@@ -1,0 +1,25 @@
+{
+  "title": "Дід не здається",
+  "logline": "Старий картопля-дід хизується перед онукою-морквиною на нічному городі.",
+  "visual_style": "bright 2D cartoon, moonlit night garden",
+  "characters": [
+    {"name": "Дід-Картопля", "appearance": "old wrinkled potato grandpa with round glasses", "voice": "male_deep"},
+    {"name": "Морквина", "appearance": "young carrot granddaughter with a pink bow", "voice": "female_bright"}
+  ],
+  "shots": [
+    {
+      "shot_id": 1,
+      "lines": [{"line_index": 0, "speaker": "Дід-Картопля", "delivery": "grumpy, proud, stubborn old man"}],
+      "on_screen": ["Дід-Картопля", "Морквина"],
+      "visual_prompt": "Night vegetable garden under the full moon, potato grandpa and carrot girl by the fence",
+      "camera": "zoom_in"
+    },
+    {
+      "shot_id": 2,
+      "lines": [{"line_index": 1, "speaker": "Морквина", "delivery": "laughing, playful, teasing"}],
+      "on_screen": ["Морквина"],
+      "visual_prompt": "Close-up of the carrot girl in the moonlit garden, grinning",
+      "camera": "pan_right"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/check.py",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+[project]
+name = "reelgen"
+version = "0.1.0"
+description = "Idea -> vertical short video agent (PoC for HOLYWATER test task)"
+requires-python = ">=3.11"
+dependencies = [
+    "openai>=2.0",
+    "pydantic>=2.6",
+    "imageio-ffmpeg>=0.5",
+    "pillow>=10.1",
+    "edge-tts>=6.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+reelgen = "reelgen.cli:main"
+
+[tool.setuptools]
+packages = ["reelgen", "reelgen.providers"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
