@@ -34,9 +34,10 @@ Hard rules:
 
 PUPPET_HINT = """
 Rendering note: frames are drawn by a 2D puppet renderer, not an image model. Make every character one
-of these templates, named in `name` or `appearance`: cabbage, beet, potato, carrot, tomato, cucumber
+of these templates, named in `name` or `appearance`: cabbage, beet, potato, carrot, tomato, cucumber, zucchini
 (anything else becomes a plain blob). Optional accessories via appearance keywords: apron, headscarf,
-glasses, hair bow, bow tie. Scene is chosen from keywords: kitchen (default) or garden / vegetable patch.
+glasses, sunglasses, gold chain, crown, patch, hair bow, bow tie. Scene keywords in visual_prompt: kitchen
+(default), garden / vegetable patch, luxury / penthouse.
 Put the speaker on_screen.
 """
 
@@ -45,9 +46,11 @@ def script_system(max_shots: int, renderer: str) -> str:
     return SCRIPT_SYSTEM.format(max_shots=max_shots) + (PUPPET_HINT if renderer == "puppet" else "")
 
 
-def script_user(parsed: ParsedInput, feedback: list[str]) -> str:
+def script_user(parsed: ParsedInput, feedback: list[str], context: str = "") -> str:
     lines = "\n".join(f"[{i}] {t}" for i, t in enumerate(parsed.lines))
     user = f"IDEA:\n{parsed.idea}\n\nLINES (language: {parsed.lang}):\n{lines}"
+    if context:
+        user += f"\n\n{context}"
     if feedback:
         user += "\n\nYour previous plan was rejected by the validator. Fix ALL of these:\n- " + "\n- ".join(
             feedback

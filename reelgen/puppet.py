@@ -17,7 +17,7 @@ from array import array
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 from .media import FFMPEG, Caption, MediaError
 from .models import Character, ScriptPlan, ShotPlan
@@ -33,17 +33,23 @@ KINDS = {
     "carrot": ("carrot", "морк"),
     "tomato": ("tomato", "помідор", "томат"),
     "cucumber": ("cucumber", "огір", "огур"),
+    "zucchini": ("zucchini", "кабач"),
 }
 ACCESSORIES = {
     "apron": ("apron", "фартух"),
     "headscarf": ("headscarf", "scarf", "хустк"),
+    "sunglasses": ("sunglasses", "dark glasses", "темні окуляри"),
     "glasses": ("glasses", "окуляр"),
+    "chain": ("gold chain", "ланцюг"),
+    "crown": ("crown", "корон"),
+    "patch": ("patch", "латк"),
     "bowtie": ("bow tie", "bowtie", "метелик"),
     "bow": ("hair bow", "pink bow", "бант"),
 }
 SCENES = {
     "garden": ("garden", "город", "грядк", "vegetable patch"),
     "kitchen": ("kitchen", "кухн", "борщ", "pot", "каструл"),
+    "luxury": ("luxury", "penthouse", "mansion", "palace", "vip", "пентхаус", "маєт", "палац", "розкіш"),
 }
 
 
@@ -63,7 +69,11 @@ def kind_of(c: Character) -> str:
 
 def accessories_of(c: Character) -> set[str]:
     found = {a for a, keys in ACCESSORIES.items() if _has(c.appearance, keys)}
-    return found - {"bow"} if "bowtie" in found else found
+    if "bowtie" in found:
+        found.discard("bow")
+    if "sunglasses" in found:
+        found.discard("glasses")
+    return found
 
 
 # ------------------------------------------------------------------ expressions
@@ -197,6 +207,27 @@ def _draw_body(kind: str, acc: set[str], scale: float, seed: int) -> tuple[Image
             star.append((cx + rr * math.cos(a), cy - r * 0.86 + rr * math.sin(a) * 0.55))
         d.polygon(star, fill="#3f8a2e")
         face = Face(0.5, 0.63, 1.0)
+    elif kind == "zucchini":
+        cy, rx, ry = H * 0.62, W * 0.30, H * 0.34
+        d.polygon(_ellipse_poly(cx, cy, rx, ry, 0.0), fill="#3f7d2c", outline="#244d17")
+        for off in (-0.6, -0.2, 0.2, 0.6):  # pale stripes
+            sx = cx + off * rx
+            d.line(
+                [
+                    (sx + off * rx * 0.25 * math.sin(t / 10 * math.pi), cy - ry * 0.85 + ry * 1.7 * t / 10)
+                    for t in range(11)
+                ],
+                fill="#7fb35c",
+                width=int(7 * k),
+                joint="curve",
+            )
+        d.rounded_rectangle(
+            (cx - 16 * k, cy - ry - 34 * k, cx + 16 * k, cy - ry + 12 * k),
+            radius=int(8 * k),
+            fill="#8a9a4a",
+            outline="#55602a",
+        )
+        face = Face(0.5, 0.55, 0.9)
     elif kind == "cucumber":
         cy, rx, ry = H * 0.60, W * 0.27, H * 0.38
         d.polygon(_ellipse_poly(cx, cy, rx, ry, 0.0), fill="#5c9e3a", outline="#2f6420")
@@ -246,6 +277,47 @@ def _draw_body(kind: str, acc: set[str], scale: float, seed: int) -> tuple[Image
             [(fx + W * 0.3, top + 40 * k), (fx + W * 0.42, top + 80 * k), (fx + W * 0.36, top + 20 * k)],
             fill="#d23b3b",
         )
+    if "chain" in acc:
+        cy0, rr = fy + 95 * k * face.s, W * 0.2
+        for i in range(15):
+            a = math.pi * (0.1 + 0.8 * i / 14)
+            px, py = fx + math.cos(a) * rr, cy0 + math.sin(a) * rr * 0.55
+            d.ellipse((px - 7 * k, py - 7 * k, px + 7 * k, py + 7 * k), fill="#f2c230", outline="#a67c00")
+        md = cy0 + rr * 0.55 + 22 * k
+        d.ellipse(
+            (fx - 24 * k, md - 24 * k, fx + 24 * k, md + 24 * k),
+            fill="#ffd54a",
+            outline="#a67c00",
+            width=int(4 * k),
+        )
+        d.ellipse((fx - 9 * k, md - 9 * k, fx + 9 * k, md + 9 * k), fill="#3fb6ff")
+    if "crown" in acc:
+        top = fy - 175 * k * face.s
+        cw = W * 0.2
+        pts = [
+            (fx - cw, top + 50 * k),
+            (fx - cw, top),
+            (fx - cw * 0.5, top + 30 * k),
+            (fx, top - 15 * k),
+            (fx + cw * 0.5, top + 30 * k),
+            (fx + cw, top),
+            (fx + cw, top + 50 * k),
+        ]
+        d.polygon(pts, fill="#f5c518", outline="#a67c00")
+        for gx, col in ((-0.55, "#e0245e"), (0, "#3fb6ff"), (0.55, "#2ecc71")):
+            d.ellipse((fx + gx * cw - 8 * k, top + 28 * k, fx + gx * cw + 8 * k, top + 44 * k), fill=col)
+    if "patch" in acc:
+        px, py = fx + W * 0.13, fy + 120 * k * face.s
+        d.rectangle(
+            (px - 26 * k, py - 22 * k, px + 26 * k, py + 22 * k),
+            fill="#b08a5a",
+            outline="#6e5434",
+            width=int(3 * k),
+        )
+        for i in range(-2, 3):
+            d.line(
+                (px + i * 10 * k, py - 26 * k, px + i * 10 * k, py - 18 * k), fill="#3a2a18", width=int(3 * k)
+            )
     if "bowtie" in acc:
         tx, ty = fx, fy + 120 * k * face.s
         d.polygon([(tx, ty), (tx - 40 * k, ty - 24 * k), (tx - 40 * k, ty + 24 * k)], fill="#1f2a44")
@@ -257,8 +329,29 @@ def _draw_body(kind: str, acc: set[str], scale: float, seed: int) -> tuple[Image
         d.polygon([(bx, by), (bx + 45 * k, by - 30 * k), (bx + 45 * k, by + 30 * k)], fill="#ff5fa2")
         d.ellipse((bx - 12 * k, by - 12 * k, bx + 12 * k, by + 12 * k), fill="#e23b82")
 
+    im = _shade(im)
     small = im.resize((W // SS, H // SS), Image.LANCZOS)
     return small, face
+
+
+def _shade(im: Image.Image) -> Image.Image:
+    """Fake 3D: key light from the upper left, darker lower right, soft specular spot. Keeps the alpha."""
+    W, H = im.size
+    n = 64
+    light = Image.new("L", (n, n))
+    for y in range(n):
+        for x in range(n):
+            dist = math.hypot((x / n - 0.32) * 1.1, (y / n - 0.25) * 0.9)
+            light.putpixel((x, y), int(255 - min(1.0, dist / 0.95) * 120))
+    light = light.resize((W, H), Image.BILINEAR)
+    rgb = ImageChops.multiply(im.convert("RGB"), Image.merge("RGB", (light, light, light)))
+    spec = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(spec).ellipse((W * 0.24, H * 0.36, W * 0.42, H * 0.47), fill=110)
+    spec = ImageChops.multiply(spec.filter(ImageFilter.GaussianBlur(W * 0.04)), im.getchannel("A"))
+    rgb = Image.composite(Image.new("RGB", (W, H), "white"), rgb, spec)
+    out = rgb.convert("RGBA")
+    out.putalpha(im.getchannel("A"))
+    return out
 
 
 def _draw_face(
@@ -269,7 +362,7 @@ def _draw_face(
     mouth_open: float,
     blink: float,
     look: float,
-    glasses: bool,
+    eyewear: str | None,
 ) -> Image.Image:
     """Face layer for one frame, same size as the 1x sprite. Drawn supersampled, then downsized."""
     W, H = size[0] * SS, size[1] * SS
@@ -317,14 +410,32 @@ def _draw_face(
             fill="#2a1d14",
             width=int(7 * k),
         )
-        if glasses:
+        if eyewear == "glasses":
             d.ellipse(
                 (ex - er * 1.45, ey - er * 1.35, ex + er * 1.45, ey + er * 1.35),
                 outline="#3b3b3b",
                 width=int(5 * k),
             )
-    if glasses:
+    if eyewear == "glasses":
         d.line((fx - dx + er * 1.45, ey, fx + dx - er * 1.45, ey), fill="#3b3b3b", width=int(5 * k))
+    if eyewear == "sunglasses":
+        for side in (-1, 1):
+            ex = fx + side * dx
+            d.rounded_rectangle(
+                (ex - er * 1.5, ey - er * 1.1, ex + er * 1.5, ey + er * 1.15),
+                radius=int(er * 0.6),
+                fill="#111114",
+                outline="#000000",
+                width=int(3 * k),
+            )
+            d.line(
+                (ex - er * 0.9, ey - er * 0.5, ex - er * 0.2, ey - er * 0.8), fill="#8a8aa0", width=int(5 * k)
+            )
+        d.line(
+            (fx - dx + er * 1.5, ey - er * 0.4, fx + dx - er * 1.5, ey - er * 0.4),
+            fill="#111114",
+            width=int(7 * k),
+        )
 
     my, mw = fy + 42 * k, 46 * k
     if mouth_open > 0.08:
@@ -349,8 +460,12 @@ def _draw_face(
 
 
 # ------------------------------------------------------------------ scenes
+def match_scene(text: str) -> str | None:
+    return next((s for s, keys in SCENES.items() if _has(text, keys)), None)
+
+
 def scene_of(text: str) -> str:
-    return next((s for s, keys in SCENES.items() if _has(text, keys)), "kitchen")
+    return match_scene(text) or "kitchen"
 
 
 def _background(scene: str, w: int, h: int, seed: int) -> Image.Image:
@@ -383,6 +498,24 @@ def _background(scene: str, w: int, h: int, seed: int) -> Image.Image:
         for _ in range(16):
             x, y = rnd.randint(0, w), rnd.randint(1500, h - 40)
             d.polygon(_ellipse_poly(x, y, 14, 30, rnd.uniform(-0.6, 0.6), 24), fill=(70, 130, 60))
+    elif scene == "luxury":
+        grad(0, 1400, (24, 12, 40), (88, 36, 92))
+        glow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        g = ImageDraw.Draw(glow)
+        for x0, col in ((180, (255, 200, 90, 90)), (540, (255, 120, 200, 80)), (900, (120, 180, 255, 80))):
+            g.polygon([(x0 - 40, 0), (x0 + 40, 0), (x0 + 260, 1400), (x0 - 260, 1400)], fill=col)
+        glow = glow.filter(ImageFilter.GaussianBlur(40))
+        im.paste(glow, (0, 0), glow)
+        for i in range(9):  # chandelier
+            a = math.pi * i / 8
+            x, y = 540 + math.cos(a) * 170, 180 + math.sin(a) * 60
+            d.ellipse((x - 16, y - 16, x + 16, y + 16), fill=(255, 236, 170))
+        d.line((540, 0, 540, 150), fill=(200, 170, 90), width=6)
+        for _ in range(40):
+            x, y = rnd.randint(0, w), rnd.randint(0, 1300)
+            d.ellipse((x - 3, y - 3, x + 3, y + 3), fill=(255, 220, 140))
+        d.rectangle((0, 1400, w, h), fill=(120, 16, 36))  # red carpet stage
+        d.rectangle((0, 1400, w, 1430), fill=(212, 170, 60))
     else:  # kitchen
         grad(0, 1100, (250, 222, 186), (238, 192, 146))
         for y in range(1100, 1400, 70):  # tiles
@@ -479,7 +612,13 @@ class ShotRenderer:
                     "scale": scale,
                     "body": body,
                     "face": face,
-                    "glasses": "glasses" in accessories_of(c),
+                    "eyewear": (
+                        "sunglasses"
+                        if "sunglasses" in accessories_of(c)
+                        else "glasses"
+                        if "glasses" in accessories_of(c)
+                        else None
+                    ),
                     "rest": default_expr.get(name, NEUTRAL),
                     "phase": random.Random(name).uniform(0, 6.28),
                     "blinks": random.Random(name + "b"),
@@ -508,8 +647,14 @@ class ShotRenderer:
             bob = math.sin(t * 2 * math.pi * 0.5 + a["phase"]) * 5 + mouth * 12
             bx = int(a["x"] - body.width / 2)
             by = int(GROUND_Y + 30 - body.height - bob)
+            sh_w = int(body.width * 0.62)
+            shadow = Image.new("RGBA", (sh_w + 80, 120), (0, 0, 0, 0))
+            ImageDraw.Draw(shadow).ellipse((40, 40, sh_w + 40, 80), fill=(20, 10, 10, 110))
+            im.alpha_composite(
+                shadow.filter(ImageFilter.GaussianBlur(14)), (int(a["x"] - sh_w / 2 - 40), GROUND_Y - 30)
+            )
             im.alpha_composite(body, (bx, by))
-            f = _draw_face(body.size, face, a["scale"], e, mouth, blink, look, a["glasses"])
+            f = _draw_face(body.size, face, a["scale"], e, mouth, blink, look, a["eyewear"])
             im.alpha_composite(f, (bx, by))
         z, dx = _camera(self.shot.camera, t / max(dur, 0.01))
         cw, ch = self.w / z, self.h / z
@@ -603,7 +748,22 @@ def render_still(plan: ScriptPlan, shot: ShotPlan, scene_text: str, dst: Path, w
 
 def render_portrait(c: Character, dst: Path) -> None:
     body, face = _draw_body(kind_of(c), accessories_of(c), 1.0, 7)
-    f = _draw_face(body.size, face, 1.0, NEUTRAL, 0.0, 1.0, 0.0, "glasses" in accessories_of(c))
+    f = _draw_face(
+        body.size,
+        face,
+        1.0,
+        NEUTRAL,
+        0.0,
+        1.0,
+        0.0,
+        (
+            "sunglasses"
+            if "sunglasses" in accessories_of(c)
+            else "glasses"
+            if "glasses" in accessories_of(c)
+            else None
+        ),
+    )
     out = Image.new("RGBA", body.size, (236, 238, 242, 255))
     out.alpha_composite(body)
     out.alpha_composite(f)

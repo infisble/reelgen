@@ -36,11 +36,11 @@ class OpenAIWriter:
     def __init__(self, client, settings: Settings, counters: dict):
         self.c, self.s, self.k = client, settings, counters
 
-    def write(self, parsed: ParsedInput, feedback: list[str]) -> ScriptPlan:
+    def write(self, parsed: ParsedInput, feedback: list[str], context: str = "") -> ScriptPlan:
         resp = self.c.responses.parse(
             model=self.s.llm_model,
             instructions=script_system(self.s.max_shots, self.s.renderer),
-            input=script_user(parsed, feedback),
+            input=script_user(parsed, feedback, context),
             text_format=ScriptPlan,
         )
         _bump(self.k, "llm_calls")

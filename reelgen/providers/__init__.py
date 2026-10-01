@@ -11,7 +11,9 @@ from ..models import ImageReview, ParsedInput, ScriptPlan
 
 
 class ScriptWriter(Protocol):
-    def write(self, parsed: ParsedInput, feedback: list[str]) -> ScriptPlan: ...
+    def write(self, parsed: ParsedInput, feedback: list[str], context: str = "") -> ScriptPlan:
+        """`context`: extra fixed facts for the plan, e.g. the series bible (cast, style)."""
+        ...
 
 
 class TTS(Protocol):

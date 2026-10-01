@@ -33,8 +33,10 @@ class ClaudeCodeWriter:
         self.exe = find_claude()
         self.model = os.environ.get("REELGEN_CLAUDE_MODEL", "sonnet")
 
-    def write(self, parsed: ParsedInput, feedback: list[str]) -> ScriptPlan:
-        prompt = script_system(self.s.max_shots, self.s.renderer) + "\n\n" + script_user(parsed, feedback)
+    def write(self, parsed: ParsedInput, feedback: list[str], context: str = "") -> ScriptPlan:
+        prompt = (
+            script_system(self.s.max_shots, self.s.renderer) + "\n\n" + script_user(parsed, feedback, context)
+        )
         schema = json.dumps(ScriptPlan.model_json_schema(), ensure_ascii=True)
         cmd = [
             self.exe,

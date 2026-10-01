@@ -87,12 +87,40 @@ def stage_parse(ctx: RunContext, s: Settings, p: Providers) -> dict:
     }
 
 
+def _load_bible(ctx: RunContext) -> dict | None:
+    path = ctx.state.options.get("series")
+    return json.loads(Path(path).read_text(encoding="utf-8")) if path else None
+
+
+def _bible_context(bible: dict) -> str:
+    cast = "\n".join(f"- {c['name']}: {c['appearance']} (voice: {c['voice']})" for c in bible["characters"])
+    return (
+        "SERIES BIBLE - this is one episode of a series. Use exactly these character names; their look and "
+        f"voice are fixed and will be enforced.\nVisual style: {bible.get('visual_style', '')}\nCast:\n{cast}"
+        + (f"\nNotes: {bible['notes']}" if bible.get("notes") else "")
+    )
+
+
+def _apply_bible(plan: ScriptPlan, bible: dict) -> None:
+    """Code-enforced consistency: a known character always looks and sounds the same, whatever was written."""
+    fixed = {c["name"]: c for c in bible["characters"]}
+    for c in plan.characters:
+        if c.name in fixed:
+            c.appearance, c.voice = fixed[c.name]["appearance"], fixed[c.name]["voice"]
+    if bible.get("visual_style"):
+        plan.visual_style = bible["visual_style"]
+
+
 def stage_script(ctx: RunContext, s: Settings, p: Providers) -> dict:
     parsed = ParsedInput.model_validate(ctx.read_json("input.json"))
+    bible = _load_bible(ctx)
+    context = _bible_context(bible) if bible else ""
     feedback: list[str] = []
     for attempt in range(1, s.script_attempts + 1):
         try:
-            plan = p.writer.write(parsed, feedback)
+            plan = p.writer.write(parsed, feedback, context)
+            if bible:
+                _apply_bible(plan, bible)
             errors = validate_plan(plan, parsed, s.max_shots)
         except ValueError as e:  # refusal / unparsable output
             plan, errors = None, [str(e)]
@@ -271,6 +299,9 @@ def stage_images(ctx: RunContext, s: Settings, p: Providers) -> dict:
 
 
 def _scene_text(ctx: RunContext, plan: ScriptPlan, sh) -> str:
+    # the shot's own description wins: an idea mentioning "rich" must not turn every shot into a penthouse
+    if puppet.match_scene(sh.visual_prompt):
+        return sh.visual_prompt
     return f"{sh.visual_prompt} {plan.visual_style} {ctx.state.idea}"
 
 

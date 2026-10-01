@@ -1,0 +1,11 @@
+{
+  "title": "Кабачок-мільйонер",
+  "visual_style": "glossy 3D cartoon vegetables, vertical brainrot micro-drama",
+  "notes": "Episodes 1-2: the zucchini hides his wealth and is shown only as 'Кабачок'. 'Кабачок-мільйонер' (the same zucchini after the reveal) appears only in episode 3.",
+  "characters": [
+    {"name": "Кабачок", "appearance": "small young zucchini, shy, cloth patch", "voice": "male_calm"},
+    {"name": "Кабачок-мільйонер", "appearance": "small young zucchini in black sunglasses, gold chain and golden crown", "voice": "male_calm"},
+    {"name": "Помідора", "appearance": "proud tomato girl with a pink hair bow", "voice": "female_bright"},
+    {"name": "Дід-Картопля", "appearance": "old potato butler with round glasses and a bow tie", "voice": "male_deep"}
+  ]
+}

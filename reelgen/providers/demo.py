@@ -25,7 +25,7 @@ EDGE_VOICES = {
 
 
 class TemplateWriter:
-    def write(self, parsed: ParsedInput, feedback: list[str]) -> ScriptPlan:
+    def write(self, parsed: ParsedInput, feedback: list[str], context: str = "") -> ScriptPlan:
         idea = parsed.idea.strip()
         for line in parsed.lines:  # keep dialogue out of image prompts (validator rule)
             idea = idea.replace(line, "")
@@ -136,7 +136,7 @@ class FilePlanWriter:
     def __init__(self, path: Path):
         self.path = path
 
-    def write(self, parsed: ParsedInput, feedback: list[str]) -> ScriptPlan:
+    def write(self, parsed: ParsedInput, feedback: list[str], context: str = "") -> ScriptPlan:
         if feedback:
             raise ValueError(f"plan file {self.path} is invalid: {feedback}")
         return ScriptPlan.model_validate_json(self.path.read_text(encoding="utf-8"))

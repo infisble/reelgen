@@ -1,5 +1,6 @@
 """End-to-end pipeline with fake providers (offline, deterministic, real ffmpeg)."""
 
+import json
 import math
 import struct
 import wave
@@ -125,8 +126,8 @@ def test_too_long_input_rejected(tmp_path):
 class CastWriter(TemplateWriter):
     """Template plan + one real character who is on screen in the dialogue shot."""
 
-    def write(self, parsed, feedback):
-        plan = super().write(parsed, feedback)
+    def write(self, parsed, feedback, context=""):
+        plan = super().write(parsed, feedback, context)
         plan.characters = [
             Character(name="A", appearance="old keeper, grey beard, yellow raincoat", voice="male_deep")
         ]
@@ -154,3 +155,19 @@ def test_character_reference_is_used_in_shots_with_that_character(tmp_path):
     assert "yellow raincoat" in cast_call[0] and cast_call[1] == []
     assert shot1[1] == []  # establishing shot: nobody on screen
     assert shot2[1] == ["char_0.png"] and "reference images" in shot2[0]
+
+
+def test_series_bible_overrides_invented_looks(tmp_path):
+    bible = {
+        "visual_style": "glossy 3D",
+        "characters": [{"name": "A", "appearance": "zucchini with a patch", "voice": "male_calm"}],
+    }
+    bible_file = tmp_path / "bible.json"
+    bible_file.write_text(json.dumps(bible), encoding="utf-8")
+    ctx, p, _ = make(tmp_path)
+    ctx.state.options = {"series": str(bible_file)}
+    p.writer = CastWriter()  # invents "old keeper, grey beard, yellow raincoat" for A
+    run_pipeline(ctx, load_settings(demo=True), p)
+    plan = json.loads((ctx.dir / "script.json").read_text(encoding="utf-8"))
+    assert plan["characters"][0]["appearance"] == "zucchini with a patch"
+    assert plan["characters"][0]["voice"] == "male_calm" and plan["visual_style"] == "glossy 3D"

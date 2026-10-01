@@ -89,3 +89,15 @@ def test_scene_and_accessory_keywords_do_not_misfire():
     assert puppet.scene_of("night vegetable garden") == "garden"
     anchor = Character(name="Помідор", appearance="news anchor with a bow tie", voice="male_calm")
     assert puppet.accessories_of(anchor) == {"bowtie"}
+
+
+def test_rich_look_and_scene_priority():
+    rich = Character(
+        name="Кабачок-мільйонер",
+        appearance="zucchini in black sunglasses, gold chain and golden crown",
+        voice="male_calm",
+    )
+    assert puppet.kind_of(rich) == "zucchini"
+    assert puppet.accessories_of(rich) == {"sunglasses", "chain", "crown"}
+    assert puppet.match_scene("Penthouse party under the chandelier") == "luxury"
+    assert puppet.match_scene("close-up, soft light") is None  # falls back to the idea text, then kitchen
