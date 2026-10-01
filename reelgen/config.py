@@ -25,7 +25,7 @@ class Settings:
     # Pipeline limits / quality gates
     min_video_s: float = 8.0
     max_video_s: float = 30.0
-    max_shots: int = 3
+    max_shots: int = 4
     script_attempts: int = 3  # LLM repair loop
     tts_attempts: int = 3  # re-synthesize until STT matches the line verbatim
     image_attempts: int = 3  # regenerate if the vision judge rejects the frame

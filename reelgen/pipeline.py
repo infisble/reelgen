@@ -23,6 +23,7 @@ from .media import (
     build_timeline_wav,
     concat,
     extract_audio,
+    mix_music,
     probe,
     render_caption,
     render_shot,
@@ -398,8 +399,14 @@ def stage_render(ctx: RunContext, s: Settings, p: Providers) -> dict:
 def stage_assemble(ctx: RunContext, s: Settings, p: Providers) -> dict:
     clips = [ctx.dir / c for c in ctx.stage("render").outputs["clips"]]
     final = ctx.path("final.mp4")
-    concat(clips, final)
-    return {"final": "final.mp4"}
+    music = ctx.state.options.get("music")
+    if not music:
+        concat(clips, final)
+        return {"final": "final.mp4"}
+    voice_only = ctx.path("render/voice_only.mp4")
+    concat(clips, voice_only)
+    mix_music(voice_only, Path(music), final)
+    return {"final": "final.mp4", "music": Path(music).name}
 
 
 def stage_qa(ctx: RunContext, s: Settings, p: Providers) -> dict:

@@ -87,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
         default="api",
         help="local: generate frames with an open SDXL model on the local GPU (no API key)",
     )
+    ap.add_argument("--music", help="background track (wav/mp3), looped and ducked under the voices")
     ap.add_argument("--series", help="series bible JSON: fixed cast (name, appearance, voice) and style")
     ap.add_argument(
         "--writer",
@@ -111,6 +112,7 @@ def main(argv: list[str] | None = None) -> int:
         "writer": a.writer,
         "series": a.series,
         "images": a.images,
+        "music": a.music,
     }
     ctx = run_once(a.idea, a.demo, a.runs_dir, a.resume, a.from_stage, a.run_id, opts)
     status = ctx.state.status

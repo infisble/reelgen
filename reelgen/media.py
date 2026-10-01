@@ -228,5 +228,42 @@ def probe(path: Path) -> Probe:
     )
 
 
+def mix_music(video: Path, music: Path, dst: Path, level: float = 0.32) -> None:
+    """Loop the track under the dialogue and duck it while someone speaks (sidechain compression)."""
+    dur = probe(video).duration
+    graph = (
+        f"[1:a]aformat=sample_rates=48000:channel_layouts=stereo,volume={level},"
+        f"afade=t=in:d=0.6,afade=t=out:st={max(dur - 1.2, 0):.2f}:d=1.2[m];"
+        "[0:a]aformat=sample_rates=48000:channel_layouts=stereo,asplit=2[v][sc];"
+        "[m][sc]sidechaincompress=threshold=0.03:ratio=10:attack=15:release=350[duck];"
+        "[v][duck]amix=inputs=2:duration=first:normalize=0[a]"
+    )
+    _ffmpeg(
+        "-i",
+        str(video),
+        "-stream_loop",
+        "-1",
+        "-i",
+        str(music),
+        "-filter_complex",
+        graph,
+        "-map",
+        "0:v",
+        "-map",
+        "[a]",
+        "-c:v",
+        "copy",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-t",
+        f"{dur:.3f}",
+        "-movflags",
+        "+faststart",
+        str(dst),
+    )
+
+
 def extract_audio(video: Path, dst_wav: Path) -> None:
     _ffmpeg("-i", str(video), "-vn", "-ac", "1", "-ar", "16000", str(dst_wav))
